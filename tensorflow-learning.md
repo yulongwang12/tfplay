@@ -20,7 +20,8 @@ result = sess.run(ops)
 print result
 sess.close()
 ```
-    * or use context manager `with tf.Session() as sess:`
+
+* or use context manager `with tf.Session() as sess:`
 * use `with tf.device('/gpu:0')` to specify assignment
 * `tf.InteractiveSession()` works like IPython
 
