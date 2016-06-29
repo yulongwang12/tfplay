@@ -109,3 +109,21 @@ learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step,
 learning_step = (tf.GradientDescentOptimizer(learning_rate)
                 .minimize(...my loss..., global_step=global_step))
 ```
+
+# Regularizer
+* general regularization
+```python
+def regularize_cost(reg_func, name=None):
+    G = tf.get_default_graph()
+    params = G.get_collection(tf.GraphKeys.TRAINABLE_VARIABELS)
+
+    reg_cost = []
+    for p in params:
+        if p.name.endswith('W'): # only regularize 'conv*/W' or 'fc*/W'
+            reg_cost.append(reg_func(p))
+
+    if not reg_cost:
+        return 0
+    return tf.add_n(reg_cost, name=name)
+```
+* for l2 regularization, use reg_func `tf.nn.l2_loss`
