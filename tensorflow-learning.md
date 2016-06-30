@@ -128,3 +128,15 @@ def regularize_cost(reg_func, name=None):
     return tf.add_n(reg_cost, name=name)
 ```
 * for l2 regularization, use reg_func `tf.nn.l2_loss`
+
+# Layers
+* use `tf.contrib.layers` as the main codebase
+* to regularize weights, these layers have `regularizer=` option
+
+# Shared Variable
+* `tf.get_variable(name, reuse=True)`
+* useful when multi-gpu training and RNN network
+
+# Summary
+
+# QueneRunner & Coordinator
