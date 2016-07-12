@@ -43,6 +43,27 @@ Below consider `experiments/script_faster_rcnn_VOC2007_ZF` as example
 
 * `Faster_RCNN_Train.do_proposal_test`: use `model.stage1_rpn` to extract `dataset.roidb_train` for next stage training
 
+## image and roi preparation
+* call function `proposal_prepare_image_roidb` under `functions/rpn`
+  * first gather `image_path`/`image_id`/`im_size`/`imdb_name`/`num_classes`/`boxes`/`class` information to variable `image_roidb`
+  * then call `append_bbox_regression_targets` under `functions/rpn/proposal_prepare_image_roidb` to append `bbox_targets` to the variable `image_roidb`
+
+### bbox regression targets assignment
+* first call `proposal_locate_anchors` under `functions/rpn` to generate anchors, and return rescale ratio
+  * actually call `proposal_locate_anchors_single_scale` for each scale
+  * first generate the output size by dummy data one forward through the net
+  * then according to `conf.feat_stride`, decide each pixel `shift_x` and `shift_y` respect to the left-top-most pixel. All zero based.
+  * shift the precomputed 9 anchors in `conf.anchors` respect each pixel.
+  * each anchor in the form of `[xmin, ymin, xmax, ymax]`
+
+* then, assign the anchors to the target by `compute_targets` under `functions/rpn/proposal_prepare_image_roidb`, **Notice**: first to scale `gt_rois` by the rescale ratio
+  * calculate anchors and gt_rois overlaps by `boxoverlap` under `utils/`
+  * if `conf.drop_boxes_runoff`, overlaps of bboxes which are not contained in image are set 0, here to decide whether contained in image, call `is_contain_in_image` under `functions/rpn/proposal_prepare_image_roidb`
+  * the following operations seem to be perform Non-Maximum Suppression (NMS)
+  * find IoU above 0.5 for each gt_boxes, label is target transformed bbox, calculated by `functions/fast_rcnn/fast_rcnn_bbox_transform`
+  * for contained_in_image bbox, set -1
+
+
 # Stage 1 fast rcnn training
 * `Faster_RCNN_Train.do_fast_rcnn_train`, args: `conf_fast_rcnn`, `dataset`, `model.stage1_fast_rcnn`, `opt_do_val=True`. Now `dataset.roidb_train` has gathered rpn results
 
