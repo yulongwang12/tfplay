@@ -1,9 +1,9 @@
-# Data
+# 1. Data
 put a symbolic link under `datasets` with name `VOCdevkit2007`
 
 Below consider `experiments/script_faster_rcnn_VOC2007_ZF` as example
 
-# Dataset Preparation
+# 2. Dataset Preparation
 * `Dataset.voc2007_trainval` under `experiment/+Dataset` 
   * call `imdb_from_voc` from `imdb/`, collect imdb information and image list, decide whether to flip the image
   * call the imdb's `roidb_func` to get roi infos
@@ -32,23 +32,23 @@ Below consider `experiments/script_faster_rcnn_VOC2007_ZF` as example
     * output precomputed anchors to `anchor_cache_dir` in `output/rpn_cachedir/some-name`
     * first `ratio_jitter`, then `scale_jitter`
 
-# Stage 1 proposal
+# 3. Stage 1 proposal
 * `Faster_RCNN_Train.do_proposal_train`, args: `conf_proposal`, `dataset`, `model.stage1_rpn`, `opt.do_val=True`, returns: `model.stage1_rpn`
   * call `proposal_train` under `functions/rpn`
   * `solver_def_file` and `net_file` in models dir
   * prepare training data with `proposal_prepare_image_roidb`, return `image_roidb_train`, `bbox_means`, `bbox_stds`
   * `generate_random_minibatch` to variable `shuffled_inds` and `sub_db_inds`
   * `proposal_generate_minibatch` from `image_roidb_train(sub_db_inds)` to variable `net_inputs` and `scale_inds`
-  * Then feed input to net, train for one iteration 
+  * Then feed input to net, train for 1 iteration 
 
 * `Faster_RCNN_Train.do_proposal_test`: use `model.stage1_rpn` to extract `dataset.roidb_train` for next stage training
 
-## image and roi preparation
+## 3.1 image and roi preparation
 * call function `proposal_prepare_image_roidb` under `functions/rpn`
   * first gather `image_path`/`image_id`/`im_size`/`imdb_name`/`num_classes`/`boxes`/`class` information to variable `image_roidb`
   * then call `append_bbox_regression_targets` under `functions/rpn/proposal_prepare_image_roidb` to append `bbox_targets` to the variable `image_roidb`
 
-### bbox regression targets assignment
+### 3.1.1 bbox regression targets assignment
 * first call `proposal_locate_anchors` under `functions/rpn` to generate anchors, and return rescale ratio
   * actually call `proposal_locate_anchors_single_scale` for each scale
   * first generate the output size by dummy data one forward through the net
@@ -62,6 +62,12 @@ Below consider `experiments/script_faster_rcnn_VOC2007_ZF` as example
   * the following operations seem to be perform Non-Maximum Suppression (NMS)
   * find IoU above 0.5 for each gt_boxes, label is target transformed bbox, calculated by `functions/fast_rcnn/fast_rcnn_bbox_transform`
   * for contained_in_image bbox, set -1
+
+## 3.2 generate minibatch
+* first call `generate_random_minibatch` under `functions/rpn/proposal_train` to get `shuffled_inds` and `sub_inds`
+* then call `proposal_generate_minibatch` under `functions/rpn` to get real `net_inputs` and `scale_inds`
+  * **Notice**: input must be 1 image
+  * sample `conf.batch_size` samples for training. In real practice, just mask out the final output feature map weight to a tensor weight with only 128 ones tapped on.
 
 
 # Stage 1 fast rcnn training
