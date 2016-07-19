@@ -38,6 +38,7 @@ Below consider `experiments/script_faster_rcnn_VOC2007_ZF` as example
   * `solver_def_file` and `net_file` in models dir
   * prepare training data with `proposal_prepare_image_roidb`, return `image_roidb_train`, `bbox_means`, `bbox_stds`
   * `generate_random_minibatch` to variable `shuffled_inds` and `sub_db_inds`
+    * `shuffled_inds` is a queue, every time pop out `sub_db_inds` which has length of `conf.ims_per_batch`
   * `proposal_generate_minibatch` from `image_roidb_train(sub_db_inds)` to variable `net_inputs` and `scale_inds`
   * Then feed input to net, train for 1 iteration 
 
@@ -59,9 +60,11 @@ Below consider `experiments/script_faster_rcnn_VOC2007_ZF` as example
 * then, assign the anchors to the target by `compute_targets` under `functions/rpn/proposal_prepare_image_roidb`, **Notice**: first to scale `gt_rois` by the rescale ratio
   * calculate anchors and gt_rois overlaps by `boxoverlap` under `utils/`
   * if `conf.drop_boxes_runoff`, overlaps of bboxes which are not contained in image are set 0, here to decide whether contained in image, call `is_contain_in_image` under `functions/rpn/proposal_prepare_image_roidb`
-  * the following operations seem to be perform Non-Maximum Suppression (NMS)
-  * find IoU above 0.5 for each gt_boxes, label is target transformed bbox, calculated by `functions/fast_rcnn/fast_rcnn_bbox_transform`
-  * for contained_in_image bbox, set -1
+  * the following operations choose two kinds of anchors as front-ground (positive)
+    * has the IoU > `conf.fg_thresh`
+    * or is the maximum IoU for each groundtruth box
+  * regression_label is target transformed bbox, calculated by `functions/fast_rcnn/fast_rcnn_bbox_transform`
+  * for background & contained_in_image bbox, set -1
 
 ## 3.2 generate minibatch
 * first call `generate_random_minibatch` under `functions/rpn/proposal_train` to get `shuffled_inds` and `sub_inds`
