@@ -10,6 +10,7 @@ There are two established classes of methods for object detection in images
   * MultiBox
   * R-CNN
   * SPPnet
+  * MR-CNN
   * Fast R-CNN
   * ION
   * Faster R-CNN
@@ -17,3 +18,7 @@ There are two established classes of methods for object detection in images
 * bounding box
   * Selective Search
   * LocNet
+
+###MR-CNN
+1. Multi-region + crop pooling to fixed size + concatenate
+2. semantic segmentation-aware: use FCN structure to predict fg & bg
