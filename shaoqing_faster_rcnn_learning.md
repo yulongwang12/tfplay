@@ -73,10 +73,26 @@ Below consider `experiments/script_faster_rcnn_VOC2007_ZF` as example
   * sample `conf.batch_size` samples for training. In real practice, just mask out the final output feature map weight to a tensor weight with only 128 ones tapped on.
 
 
-# Stage 1 fast rcnn training
+# 4. Stage 1 fast rcnn training
 * `Faster_RCNN_Train.do_fast_rcnn_train`, args: `conf_fast_rcnn`, `dataset`, `model.stage1_fast_rcnn`, `opt_do_val=True`. Now `dataset.roidb_train` has gathered rpn results
 
 **Notice**: Meanwhile, the model has performed test `Faster_RCNN_Train.do_fast_rcnn_test`, get results in `opts.mAP`
+
+## 4.1 fast rcnn training
+call `fast_rcnn_train` under `functions/fast_rcnn`
+* first prepare image & roidb by calling `fast_rcnn_prepare_image_roidb` under `functions/fast_rcnn`
+  * now `image_roidb` save each item with `image_path`, `im_size`, `overlap`, `boxes`, `class`, `bbox_targets`
+  * `append_bbox_regression_targets` to compute `bbox_targets` and normalize the transformed targets
+  * `compute_targets` compute proposal bboxes and associated targets, using `overlap` information
+    * first get `max_overlaps`
+  
+* generate minibatch to feed net by `fast_rcnn_get_minibatch` under `functions/fast_rcnn`
+* get the loss and backprop
+
+## 4.2 fast rcnn testing
+* first load image, read rois from `roidb` (precomputed by rpn or selective search)
+* call `fast_rcnn_im_detect` to result final boxes and scores
+* (however, subsequent processing not understood!!!)
 
 # Stage 2 proposal
 * init `model.stage2_rpn` with `model.stage1_fast_rcnn.output_model_file`
